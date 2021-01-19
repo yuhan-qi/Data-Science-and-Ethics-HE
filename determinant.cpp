@@ -12,7 +12,7 @@ using namespace seal;
 // Recursive function for finding determinant of matrix. n is current dimension of mat[][].
 Ciphertext determinantOfMatrix(vector<vector<Ciphertext>> cipher_matrix, int dimension, double scale, Ciphertext cipher_sign,  Ciphertext cipher_sign_c, Evaluator &evaluator, RelinKeys relin_keys, Encryptor &encryptor, CKKSEncoder &ckks_encoder)
 {
-    cout << "start" << endl;
+    //cout << "start" << endl;
     double D = 0.0; // Initialize result
     double result = 0.0;
     Plaintext D_plain;
@@ -99,16 +99,16 @@ void Determinant(size_t poly_modulus_degree, int dimension)
     double scale = pow(2.0, 40);
     vector<vector<double>> matrix(dimension, vector<double>(dimension));
     // Fill input matrices
-    double r = ((double)rand() / (RAND_MAX));
-    //double filler = 1.0;
+    //double r = ((double)rand() / (RAND_MAX));
+    double filler = 1.0;
     // Matrix 1
     for (int i = 0; i < dimension; i++)
     {
         for (int j = 0; j < dimension; j++)
         {
-            matrix[i][j] = r;
-            //filler++;
-            r = ((double)rand() / (RAND_MAX));
+            matrix[i][j] = filler;
+            filler++;
+            //r = ((double)rand() / (RAND_MAX));
         }
     }
     cout << "Matrix:" << endl;
@@ -144,10 +144,10 @@ void Determinant(size_t poly_modulus_degree, int dimension)
     vector<double> result_vec;
     ckks_encoder.decode(plain_result, result_vec);
     double result = result_vec[0];
-    cout << "Result Determinant: " << result << endl;
+    cout << "Resulting Determinant: " << result << endl;
 }
 int main()
 {
-    Determinant(8192 * 2, 4);
+    Determinant(8192 * 2, 2);
     return 0;
 }
