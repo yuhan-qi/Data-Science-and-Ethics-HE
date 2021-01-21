@@ -9,7 +9,7 @@
 using namespace std;
 using namespace seal;
 
-void MatrixTranspose(size_t poly_modulus_degree, int dimension){
+void MatrixTranspose(size_t poly_modulus_degree, vector<vector<double>> matrix){
     EncryptionParameters params(scheme_type::ckks);
     params.set_poly_modulus_degree(poly_modulus_degree);
     params.set_coeff_modulus(CoeffModulus::Create(poly_modulus_degree, {60, 40, 40, 40, 40, 60}));
@@ -30,26 +30,10 @@ void MatrixTranspose(size_t poly_modulus_degree, int dimension){
     CKKSEncoder ckks_encoder(context);
     // Create Scale and U_transpose Dimension
     double scale = pow(2.0, 80);
+    int dimension = matrix.size();
     int dimensionSq = pow(dimension, 2);
-    // Create input matrix
-    vector<vector<double>> pod_matrix1_set1(dimension, vector<double>(dimension));
-    // Fill input matrices
-    // double r = ((double)rand() / (RAND_MAX));
-    double filler = 1;
-    // Matrix 1
-    for (int i = 0; i < dimension; i++)
-    {
-        for (int j = 0; j < dimension; j++)
-        {
-            pod_matrix1_set1[i][j] = filler;
-            filler++;
-            // r = ((double)rand() / (RAND_MAX));
-        }
-    }
-    cout << "Matrix 1:" << endl;
-    print_matrix(pod_matrix1_set1, 0);
     // Get U_tranposed
-    vector<vector<double>> U_transposed = get_U_transpose(pod_matrix1_set1);
+    vector<vector<double>> U_transposed = get_U_transpose(matrix);
     cout << "U_tranposed:" << endl;
     print_matrix(U_transposed, 0);
     // Get diagonals for U_transposed
@@ -65,7 +49,7 @@ void MatrixTranspose(size_t poly_modulus_degree, int dimension){
     vector<Plaintext> plain_matrix1_set1(dimension);
     for (int i = 0; i < dimension; i++)
     {
-        ckks_encoder.encode(pod_matrix1_set1[i], scale, plain_matrix1_set1[i]);
+        ckks_encoder.encode(matrix[i], scale, plain_matrix1_set1[i]);
     }
     // --------------- ENCRYPTING ----------------
     // Encrypt Matrix 1
@@ -105,6 +89,9 @@ void MatrixTranspose(size_t poly_modulus_degree, int dimension){
 
 int main()
 {
-    MatrixTranspose(8192 * 2, 4);
+    vector<vector<double>> matrix = initMatrixRand(4,4);
+    cout << "Matrix :" << endl;
+    print_matrix(matrix, 0);
+    MatrixTranspose(8192 * 2, matrix);
     return 0;
 }

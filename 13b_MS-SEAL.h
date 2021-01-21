@@ -1,10 +1,124 @@
 #include <iostream>
+#include <cfloat>
+#include <limits>
 #include <iomanip>
 #include <fstream>
 #include "seal/seal.h"
 
 using namespace std;
 using namespace seal;
+
+/*
+Initialize new matrix:
+= reserve memory only
+*/
+template <typename T>
+vector<vector<T>> initMatrix(unsigned int width, unsigned int height)
+{
+    vector<vector<T>> init_matrix(height, vector<T>(width));
+    return init_matrix;
+}
+
+/*
+Initialize new matrix:
+= reserve memory
+= set any value to 0
+*/
+vector<vector<int>> initMatrixZero(unsigned int width, unsigned int height)
+{
+    vector<vector<int>> init_matrix_zero(height, vector<int>(width));
+    for(int i = 0; i < init_matrix_zero.size(); i++)
+    {
+        for(int j = 0; j < init_matrix_zero[0].size(); j++)
+        {
+            init_matrix_zero[i][j] = 0;
+        }
+    }
+    return init_matrix_zero;
+}
+
+/*
+Initialize new matrix:
+= reserve memory
+= set any value to random number
+*/
+vector<vector<double>> initMatrixRand(unsigned int width, unsigned int height)
+{
+    vector<vector<double>> init_matrix_rand(height, vector<double>(width));
+    double r = (double)rand() / (RAND_MAX + 1.0);
+    for(int i = 0; i < init_matrix_rand.size(); i++)
+    {
+        for(int j = 0; j < init_matrix_rand[0].size(); j++)
+        {
+            init_matrix_rand[i][j] = r*10.0;
+            r = ((double)rand() / (RAND_MAX + 1.0));
+        }
+    }
+    return init_matrix_rand;
+}
+
+/*
+copy a matrix and return its copy
+*/
+template <typename T>
+vector<vector<T>> copyMatrix(vector<vector<T>> toCopy)
+{
+    vector<vector<T>> copy_matrix(toCopy.size(), vector<T>(toCopy[0].size()));
+    for(int i = 0; i < copy_matrix.size(); i++)
+    {
+        for(int j = 0; j < copy_matrix[0].size(); j++)
+        {
+            copy_matrix[i][j] = toCopy[i][j];
+        }
+    }
+    return copy_matrix;
+}
+
+/*
+destroy matrix
+= free memory
+= set any remaining value to NULL
+*/
+template <typename T>
+void freeMatrix(vector<vector<T>> toDestroy)
+{
+    toDestroy.clear();
+    toDestroy.shrink_to_fit();
+}
+
+/*
+return entry at position (xPos , yPos) , DBLMAX in case of error
+*/
+double getEntryAt(vector<vector<double>> a, unsigned int xPos, unsigned int yPos)
+{
+    if(xPos >= a.size())
+    {
+        return DBL_MAX;
+    }
+    if(yPos >= a[0].size())
+    {
+        return DBL_MAX;
+    }
+    return a[xPos][yPos];
+}
+
+/*
+set entry at position (xPos , yPos)
+return true in case of success, false otherwise
+*/
+bool setEntryAt(vector<vector<double>> a, unsigned int xPos, unsigned int yPos, double value)
+{
+    if(xPos >= a.size())
+    {
+        return false;
+    }
+    if(yPos >= a[0].size())
+    {
+        return false;
+    }
+    a[xPos][yPos] = value;
+    return true;
+}
 
 // Print function that prints a matrix (vector of vectors)
 template <typename T>

@@ -9,7 +9,7 @@
 using namespace std;
 using namespace seal;
 
-void Matrix_Subtraction(size_t poly_modulus_degree, int width, int height)
+void Matrix_Subtraction(size_t poly_modulus_degree, vector<vector<double>> matrix1, vector<vector<double>> matrix2)
 {
     EncryptionParameters params(scheme_type::ckks);
     params.set_poly_modulus_degree(poly_modulus_degree);
@@ -27,36 +27,8 @@ void Matrix_Subtraction(size_t poly_modulus_degree, int width, int height)
     CKKSEncoder ckks_encoder(context);
     // Create Scale
     double scale = pow(2.0, 40);
-    vector<vector<double>> matrix1(height, vector<double>(width));
-    vector<vector<double>> matrix2(height, vector<double>(width));
-    // Fill input matrices
-    // double r = ((double)rand() / (RAND_MAX));
-    double filler = 1;
-    // Matrix 1
-    for (int i = 0; i < height; i++)
-    {
-        for (int j = 0; j < width; j++)
-        {
-            matrix1[i][j] = filler;
-            filler++;
-            // r = ((double)rand() / (RAND_MAX));
-        }
-    }
-    cout << "Matrix 1:" << endl;
-    print_matrix(matrix1, 0);
-    filler = 2;
-    // Matrix 2
-    for (int i = 0; i < height; i++)
-    {
-        for (int j = 0; j < width; j++)
-        {
-            matrix2[i][j] = filler;
-            // r = ((double)rand() / (RAND_MAX));
-            filler++;
-        }
-    }
-    cout << "Matrix 2:" << endl;
-    print_matrix(matrix2, 0);
+    int height = matrix1.size();
+    int width = matrix1[0].size();
     vector<vector<Plaintext>> plain_matrix1(height, vector<Plaintext>(width));
     vector<vector<Plaintext>> plain_matrix2(height, vector<Plaintext>(width));
     for (int i = 0; i < height; i++)
@@ -105,10 +77,19 @@ void Matrix_Subtraction(size_t poly_modulus_degree, int width, int height)
             result_subtraction[i][j] = result[0];
         }
     }
-    print_matrix(result_subtraction,0);
+    cout << "Resulting Matrix:" << endl;
+    print_matrix(result_subtraction,2);
 }
 int main()
 {
-    Matrix_Subtraction(8192 * 2, 4, 5);
+    int width = 4;
+    int height = 5;
+    vector<vector<double>> matrix1 = initMatrixRand(width,height);
+    cout << "Matrix 1:" << endl;
+    print_matrix(matrix1,2);
+    vector<vector<double>> matrix2 = initMatrixRand(width,height);
+    cout << "Matrix 2:" << endl;
+    print_matrix(matrix2,2);
+    Matrix_Subtraction(8192 * 2, matrix1, matrix2);
     return 0;
 }

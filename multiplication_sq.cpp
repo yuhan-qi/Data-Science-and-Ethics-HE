@@ -51,7 +51,7 @@ Ciphertext CC_Matrix_Multiplication(Ciphertext ctA, Ciphertext ctB, int dimensio
     return ctAB;
 }
     
-void Matrix_Multiplication_Sq(size_t poly_modulus_degree, int dimension)
+void Matrix_Multiplication_Sq(size_t poly_modulus_degree, vector<vector<double>> matrix1, vector<vector<double>> matrix2)
 {
     EncryptionParameters params(scheme_type::ckks);
     params.set_poly_modulus_degree(poly_modulus_degree);
@@ -73,51 +73,21 @@ void Matrix_Multiplication_Sq(size_t poly_modulus_degree, int dimension)
     CKKSEncoder ckks_encoder(context);
     // Create Scale
     double scale = pow(2.0, 40);
-    
-    vector<vector<double>> pod_matrix1_set1(dimension, vector<double>(dimension));
-    vector<vector<double>> pod_matrix2_set1(dimension, vector<double>(dimension));
-    // Fill input matrices
-    // double r = ((double)rand() / (RAND_MAX));
-    double filler = 1;
-    // Matrix 1
-    for (int i = 0; i < dimension; i++)
-    {
-        for (int j = 0; j < dimension; j++)
-        {
-            pod_matrix1_set1[i][j] = filler;
-            filler++;
-            // r = ((double)rand() / (RAND_MAX));
-        }
-    }
-    cout << "Matrix 1:" << endl;
-    print_matrix(pod_matrix1_set1, 0);
-    filler = 1;
-    // Matrix 2
-    for (int i = 0; i < dimension; i++)
-    {
-        for (int j = 0; j < dimension; j++)
-        {
-            pod_matrix2_set1[i][j] = filler;
-            // r = ((double)rand() / (RAND_MAX));
-            filler++;
-        }
-    }
-    cout << "Matrix 2:" << endl;
-    print_matrix(pod_matrix2_set1, 0);
+    int dimension = matrix1.size();
     int dimensionSq = pow(dimension, 2);
     // Get U_sigma for first matrix
-    vector<vector<double>> U_sigma = get_U_sigma(pod_matrix1_set1);
+    vector<vector<double>> U_sigma = get_U_sigma(matrix1);
     cout << "\nU_sigma:" << endl;
     print_matrix(U_sigma, 0);
     // Get U_tau for second matrix
-    vector<vector<double>> U_tau = get_U_tau(pod_matrix1_set1);
+    vector<vector<double>> U_tau = get_U_tau(matrix1);
     cout << "\nU_tau:" << endl;
     print_matrix(U_tau, 0);
     // Get V_k (3D matrix)
     vector<vector<vector<double>>> V_k(dimension - 1, vector<vector<double>>(dimensionSq, vector<double>(dimensionSq)));
     for (int i = 1; i < dimension; i++)
     {
-        V_k[i - 1] = get_V_k(pod_matrix1_set1, i);
+        V_k[i - 1] = get_V_k(matrix1, i);
         cout << "\nV_" << to_string(i) << ":" << endl;
         print_matrix(V_k[i - 1], 0);
     }
@@ -125,7 +95,7 @@ void Matrix_Multiplication_Sq(size_t poly_modulus_degree, int dimension)
     vector<vector<vector<double>>> W_k(dimension - 1, vector<vector<double>>(dimensionSq, vector<double>(dimensionSq)));
     for (int i = 1; i < dimension; i++)
     {
-        W_k[i - 1] = get_W_k(pod_matrix1_set1, i);
+        W_k[i - 1] = get_W_k(matrix1, i);
         cout << "\nW_" << to_string(i) << ":" << endl;
         print_matrix(W_k[i - 1], 0);
     }
@@ -182,13 +152,13 @@ void Matrix_Multiplication_Sq(size_t poly_modulus_degree, int dimension)
     vector<Plaintext> plain_matrix1_set1(dimension);
     for (int i = 0; i < dimension; i++)
     {
-        ckks_encoder.encode(pod_matrix1_set1[i], scale, plain_matrix1_set1[i]);
+        ckks_encoder.encode(matrix1[i], scale, plain_matrix1_set1[i]);
     }
     // Encode Matrix 2
     vector<Plaintext> plain_matrix2_set1(dimension);
     for (int i = 0; i < dimension; i++)
     {
-        ckks_encoder.encode(pod_matrix2_set1[i], scale, plain_matrix2_set1[i]);
+        ckks_encoder.encode(matrix2[i], scale, plain_matrix2_set1[i]);
     }
     // --------------- ENCRYPTING ----------------
     // Encrypt U_sigma diagonals
@@ -260,6 +230,13 @@ void Matrix_Multiplication_Sq(size_t poly_modulus_degree, int dimension)
 
 int main()
 {
-    Matrix_Multiplication_Sq(8192 * 2, 4);
+    int dimension = 4;
+    vector<vector<double>> matrix1 = initMatrixRand(dimension, dimension);
+    cout << "Matrix 1:" << endl;
+    print_matrix(matrix1,2);
+    vector<vector<double>> matrix2 = initMatrixRand(dimension, dimension);
+    cout << "Matrix 2:" << endl;
+    print_matrix(matrix2,2);
+    Matrix_Multiplication_Sq(8192 * 2, matrix1, matrix2);
     return 0;
 }

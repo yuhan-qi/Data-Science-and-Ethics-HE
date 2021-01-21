@@ -9,7 +9,7 @@
 using namespace std;
 using namespace seal;
 
-void Matrix_Multiplication(size_t poly_modulus_degree, int r1, int c1, int r2, int c2)
+void Matrix_Multiplication(size_t poly_modulus_degree, vector<vector<double>> matrix1, vector<vector<double>> matrix2)
 {
     EncryptionParameters params(scheme_type::ckks);
     params.set_poly_modulus_degree(poly_modulus_degree);
@@ -27,36 +27,10 @@ void Matrix_Multiplication(size_t poly_modulus_degree, int r1, int c1, int r2, i
     CKKSEncoder ckks_encoder(context);
     // Create Scale
     double scale = pow(2.0, 40);
-    vector<vector<double>> matrix1(r1, vector<double>(c1));
-    vector<vector<double>> matrix2(r2, vector<double>(c2));
-    // Fill input matrices
-    // double r = ((double)rand() / (RAND_MAX));
-    double filler = 1;
-    // Matrix 1
-    for (int i = 0; i < r1; i++)
-    {
-        for (int j = 0; j < c1; j++)
-        {
-            matrix1[i][j] = filler;
-            filler++;
-            // r = ((double)rand() / (RAND_MAX));
-        }
-    }
-    cout << "Matrix 1:" << endl;
-    print_matrix(matrix1, 0);
-    filler = 1;
-    // Matrix 2
-    for (int i = 0; i < r2; i++)
-    {
-        for (int j = 0; j < c2; j++)
-        {
-            matrix2[i][j] = filler;
-            // r = ((double)rand() / (RAND_MAX));
-            filler++;
-        }
-    }
-    cout << "Matrix 2:" << endl;
-    print_matrix(matrix2, 0);
+    int r1 = matrix1.size();
+    int c1 = matrix1[0].size();
+    int r2 = matrix2.size();
+    int c2 = matrix2[0].size();
     vector<vector<Plaintext>> plain_matrix1(r1, vector<Plaintext>(c1));
     vector<vector<Plaintext>> plain_matrix2(r2, vector<Plaintext>(c2));
     for (int i = 0; i < r1; i++)
@@ -122,10 +96,21 @@ void Matrix_Multiplication(size_t poly_modulus_degree, int r1, int c1, int r2, i
             result_mult[i][j] = result[0];
         }
     }
+    cout << "Resulting Matrix:" << endl;
     print_matrix(result_mult,0);
 }
 int main()
 {
-    Matrix_Multiplication(8192 * 2, 4, 5, 5, 4);
+    int r1 = 4;
+    int c1 = 5;
+    int r2 = 5;
+    int c2 = 4;
+    vector<vector<double>> matrix1 = initMatrixRand(r1, c1);
+    cout << "Matrix 1:" << endl;
+    print_matrix(matrix1,2);
+    vector<vector<double>> matrix2 = initMatrixRand(r2, c2);
+    cout << "Matrix 2:" << endl;
+    print_matrix(matrix2,2);
+    Matrix_Multiplication(8192 * 2, matrix1, matrix2);
     return 0;
 }

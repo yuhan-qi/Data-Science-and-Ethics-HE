@@ -77,7 +77,7 @@ Ciphertext determinantOfMatrix(vector<vector<Ciphertext>> cipher_matrix, int dim
     return result_cipher;
 }
 
-void Determinant(size_t poly_modulus_degree, int dimension)
+void Determinant(size_t poly_modulus_degree, vector<vector<double>> matrix)
 {
     EncryptionParameters params(scheme_type::ckks);
     params.set_poly_modulus_degree(poly_modulus_degree);
@@ -97,22 +97,7 @@ void Determinant(size_t poly_modulus_degree, int dimension)
     CKKSEncoder ckks_encoder(context);
     // Create Scale
     double scale = pow(2.0, 40);
-    vector<vector<double>> matrix(dimension, vector<double>(dimension));
-    // Fill input matrices
-    //double r = ((double)rand() / (RAND_MAX));
-    double filler = 1.0;
-    // Matrix 1
-    for (int i = 0; i < dimension; i++)
-    {
-        for (int j = 0; j < dimension; j++)
-        {
-            matrix[i][j] = filler;
-            filler++;
-            //r = ((double)rand() / (RAND_MAX));
-        }
-    }
-    cout << "Matrix:" << endl;
-    print_matrix(matrix, 0);
+    int dimension = matrix.size();
     vector<vector<Plaintext>> plain_matrix(dimension, vector<Plaintext>(dimension));
     for (int i = 0; i < dimension; i++)
     {
@@ -146,8 +131,108 @@ void Determinant(size_t poly_modulus_degree, int dimension)
     double result = result_vec[0];
     cout << "Resulting Determinant: " << result << endl;
 }
+
+void DeterminantByThree(size_t poly_modulus_degree, vector<vector<double>> matrix)
+{
+    EncryptionParameters params(scheme_type::ckks);
+    params.set_poly_modulus_degree(poly_modulus_degree);
+    params.set_coeff_modulus(CoeffModulus::Create(poly_modulus_degree, {60, 40, 40, 40, 40, 60}));
+    SEALContext context(params);
+    // Generate keys, encryptor, decryptor and evaluator
+    KeyGenerator keygen(context);
+    PublicKey pk;
+    keygen.create_public_key(pk);
+    SecretKey sk = keygen.secret_key();
+    RelinKeys relin_keys;
+    keygen.create_relin_keys(relin_keys);
+    Encryptor encryptor(context, pk);
+    Evaluator evaluator(context);
+    Decryptor decryptor(context, sk);
+    // Create CKKS encoder
+    CKKSEncoder ckks_encoder(context);
+    // Create Scale
+    double scale = pow(2.0, 40);
+    int dimension = matrix.size();
+    vector<vector<Plaintext>> plain_matrix(dimension, vector<Plaintext>(dimension));
+    for (int i = 0; i < dimension; i++)
+    {
+        for (int j = 0; j < dimension; j++)
+        {
+            ckks_encoder.encode(matrix[i][j], scale, plain_matrix[i][j]);
+        }
+    }
+    vector<vector<Ciphertext>> cipher_matrix(dimension, vector<Ciphertext>(dimension));
+    for (int i = 0; i < dimension; i++)
+    {
+        for (int j = 0; j < dimension; j++)
+        {
+            encryptor.encrypt(plain_matrix[i][j], cipher_matrix[i][j]);
+        }
+    }
+    Ciphertext x1;
+    evaluator.multiply(cipher_matrix[1][1], cipher_matrix[2][2], x1);
+    Ciphertext x2;
+    evaluator.multiply(cipher_matrix[2][1], cipher_matrix[1][2], x2);
+    Ciphertext x0;
+    evaluator.sub(x1, x2, x0);
+    Ciphertext x;
+    evaluator.multiply(cipher_matrix[0][0], x0, x);
+    Ciphertext y1;
+    evaluator.multiply(cipher_matrix[1][0], cipher_matrix[2][2], y1);
+    Ciphertext y2;
+    evaluator.multiply(cipher_matrix[2][0], cipher_matrix[1][2], y2);
+    Ciphertext y0;
+    evaluator.sub(y1, y2, y0);
+    Ciphertext y;
+    evaluator.multiply(cipher_matrix[0][1], y0, y);
+    Ciphertext z1;
+    evaluator.multiply(cipher_matrix[1][0], cipher_matrix[2][1], z1);
+    Ciphertext z2;
+    evaluator.multiply(cipher_matrix[2][0], cipher_matrix[1][1], z2);
+    Ciphertext z0;
+    evaluator.sub(z1, z2, z0);
+    Ciphertext z;
+    evaluator.multiply(cipher_matrix[0][2], z0, z);
+    Ciphertext determinant;
+    evaluator.sub(x,y,determinant);
+    Ciphertext cipher_result;
+    evaluator.add(determinant,z,cipher_result);
+    // Decrypt
+    Plaintext plain_result;
+    decryptor.decrypt(cipher_result, plain_result);
+    // Decode
+    vector<double> result_vec;
+    ckks_encoder.decode(plain_result, result_vec);
+    double result = result_vec[0];
+    cout << "Resulting Determinant: " << result << endl;
+}
+
 int main()
 {
-    Determinant(8192 * 2, 2);
+    vector<vector<double>> matrix1(2, vector<double>(2));
+    double filler = 1;
+    for (int i = 0; i < 2; i++)
+    {
+        for (int j = 0; j < 2; j++)
+        {
+            matrix1[i][j] = filler;
+            filler++;
+        }
+    }
+    cout << "Matrix 1:" << endl;
+    print_matrix(matrix1, 0);
+    Determinant(8192 * 2, matrix1);
+    vector<vector<double>> matrix2(3, vector<double>(3));
+    filler = 1;
+    for (int i = 0; i < 3; i++)
+    {
+        for (int j = 0; j < 3; j++)
+        {
+            matrix2[i][j] = filler;
+            filler++;
+        }
+    }    cout << "Matrix 2:" << endl;
+    print_matrix(matrix2, 0);
+    DeterminantByThree(8192 * 2, matrix2);
     return 0;
 }
